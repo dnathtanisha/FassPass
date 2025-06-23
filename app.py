@@ -140,4 +140,4 @@ def recognize_face():
         frame_placeholder.image(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), channels="RGB", use_column_width=True)
         stop = st.button("Stop Recognition", key="stop_recognition_loop")
     cap.release()
-    st.success("Recognition stopped.")
+    st.success("Recognition stopped.") #here web
