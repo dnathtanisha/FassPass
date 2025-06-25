@@ -3,70 +3,155 @@ import os
 from openpyxl import Workbook, load_workbook
 import time
 
-face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-if not os.path.exists("datasets"):
-    os.makedirs("datasets")
+def face_registration(name=None, college=None, dataset_dir="datasets", excel_file="user_details.xlsx", 
+                     poses=None, timeout=5, camera_index=0):
+    """
+    Register a user's face by capturing images from multiple angles.
+    
+    Args:
+        name (str, optional): User's name. If None, will prompt for input.
+        college (str, optional): User's college/university. If None, will prompt for input.
+        dataset_dir (str): Directory to save face images. Default: "datasets"
+        excel_file (str): Excel file to store user details. Default: "user_details.xlsx"
+        poses (list, optional): List of poses to capture. Default: ["center", "left", "right", "up", "down"]
+        timeout (int): Time to hold each pose in seconds. Default: 5
+        camera_index (int): Camera index for cv2.VideoCapture. Default: 0
+    
+    Returns:
+        bool: True if registration successful, False otherwise
+    """
+    
+    # Set default poses if not provided
+    if poses is None:
+        poses = ["center", "left", "right", "up", "down"]
+    
+    # Initialize face cascade
+    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+    
+    # Create dataset directory if it doesn't exist
+    if not os.path.exists(dataset_dir):
+        os.makedirs(dataset_dir)
+    
+    # Initialize camera
+    cap = cv2.VideoCapture(camera_index)
+    if not cap.isOpened():
+        print("Error: Could not open webcam.")
+        return False
+    
+    try:
+        print("Automatic registration started.")
+        
+        # Get user input if not provided
+        if name is None:
+            name = input("Enter your name: ")
+        if college is None:
+            college = input("Enter your College/University: ")
+        
+        # Setup or load Excel file
+        if not _setup_excel_file(excel_file):
+            return False
+        
+        # Capture faces for each pose
+        for pose in poses:
+            if not _capture_pose(cap, face_cascade, name, college, pose, dataset_dir, timeout):
+                print(f"Failed to capture {pose} pose.")
+                return False
+        
+        # Save user details to Excel
+        if not _save_user_details(excel_file, name, college):
+            print("Warning: Failed to save user details to Excel.")
+        
+        print(f"All face angles registered for {name}. Registration complete!")
+        return True
+        
+    except KeyboardInterrupt:
+        print("\nRegistration interrupted by user.")
+        return False
+    except Exception as e:
+        print(f"Error during registration: {str(e)}")
+        return False
+    finally:
+        cap.release()
+        cv2.destroyAllWindows()
 
-cap = cv2.VideoCapture(0)
-if not cap.isOpened():
-    print("Error: Could not open webcam.")
-    exit()
-print("Automatic registration started.")
+def _setup_excel_file(excel_file):
+    """Setup Excel file with headers if it doesn't exist."""
+    try:
+        if not os.path.exists(excel_file):
+            workbook = Workbook()
+            sheet = workbook.active
+            sheet.append(["Name", "College/University"])
+            workbook.save(excel_file)
+        return True
+    except Exception as e:
+        print(f"Error setting up Excel file: {str(e)}")
+        return False
 
-Name = input("Enter your name: ")
-College = input("Enter your College/University: ")
-poses = ["center", "left", "right", "up", "down"]
-
-excel_file = "user_details.xlsx"
-if not os.path.exists(excel_file):
-    workbook = Workbook()
-    sheet = workbook.active
-    sheet.append(["Name", "College/University"])  # Remove "Image Path"
-    workbook.save(excel_file)
-else:
-    workbook = load_workbook(excel_file)
-    sheet = workbook.active
-
-for pose in poses:
-    print(f"Please turn your face to the {pose}. You have 5 seconds...")
+def _capture_pose(cap, face_cascade, name, college, pose, dataset_dir, timeout):
+    """Capture a single pose for the user."""
+    print(f"Please turn your face to the {pose}. You have {timeout} seconds...")
     start_time = time.time()
     captured = False
-    timeout = 5  # seconds
+    
     while not captured and (time.time() - start_time) < timeout:
         ret, frame = cap.read()
         if not ret:
             print("Error: Failed to capture frame from camera.")
-            break
+            return False
+        
         frame = cv2.flip(frame, 1)
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+        
         # Draw rectangles for all detected faces
         for (x, y, w, h) in faces:
             cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+        
         # Show pose and countdown
-        cv2.putText(frame, f"Pose: {pose}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2)
-        cv2.putText(frame, f"Hold for {max(0, int(5 - (time.time() - start_time)))}s", (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,255), 2)
-        # Always show the camera window
+        cv2.putText(frame, f"Pose: {pose}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        cv2.putText(frame, f"Hold for {max(0, int(timeout - (time.time() - start_time)))}s", 
+                   (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2)
+        
         cv2.imshow("Face Detection", frame)
-        # Capture after 5 seconds if a face is detected
-        if time.time() - start_time >= 5 and len(faces) > 0:
+        
+        # Capture after timeout if a face is detected
+        if time.time() - start_time >= timeout and len(faces) > 0:
+            # Get the largest face
             (x, y, w, h) = max(faces, key=lambda rect: rect[2] * rect[3])
             face_image = frame[y:y + h, x:x + w]
-            filename = f"{Name.replace(' ', '')}{College.replace(' ', '')}{pose}_{int(time.time())}.jpg"
-            filepath = os.path.join("datasets", filename)
+            filename = f"{name.replace(' ', '')}{college.replace(' ', '')}{pose}_{int(time.time())}.jpg"
+            filepath = os.path.join(dataset_dir, filename)
             cv2.imwrite(filepath, face_image)
             print(f"Face image ({pose}) saved as {filepath}")
             captured = True
+        
         # Allow user to quit early
         if cv2.waitKey(1) & 0xFF == ord('q'):
             print("Exiting early.")
-            cap.release()
-            cv2.destroyAllWindows()
-            exit()
+            return False
+    
+    return captured
 
-sheet.append([Name, College])
-workbook.save(excel_file)
+def _save_user_details(excel_file, name, college):
+    """Save user details to Excel file."""
+    try:
+        workbook = load_workbook(excel_file)
+        sheet = workbook.active
+        sheet.append([name, college])
+        workbook.save(excel_file)
+        return True
+    except Exception as e:
+        print(f"Error saving to Excel: {str(e)}")
+        return False
 
-print(f"All face angles registered for {Name}. Exiting...")
-cap.release()
-cv2.destroyAllWindows()
+# Example usage
+if __name__ == "__main__":
+    # Method 1: Let the function prompt for input
+    face_registration()
+    
+    # Method 2: Pass parameters directly
+    # face_registration(name="John Doe", college="MIT", timeout=3)
+    
+    # Method 3: Custom poses and settings
+    # custom_poses = ["front", "left_profile", "right_profile"]
+    # face_registration(poses=custom_poses, dataset_dir="my_faces", timeout=7)
