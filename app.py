@@ -50,14 +50,7 @@ class FaceRecognizer:
     """An improved face recognition system with multiple matching algorithms."""
     
     def __init__(self, dataset_dir="datasets", recognition_threshold=0.6, min_votes=1):
-        """
-        Initialize the Face Recognizer with improved algorithms.
-        
-        Args:
-            dataset_dir (str): Directory containing face images
-            recognition_threshold (float): Threshold for face recognition (0.0-1.0)
-            min_votes (int): Minimum votes needed for recognition
-        """
+       
         self.dataset_dir = dataset_dir
         self.recognition_threshold = recognition_threshold
         self.min_votes = min_votes
@@ -78,16 +71,7 @@ class FaceRecognizer:
         self.label_to_person = {} # Map integer labels from recognizers back to person_id
 
     def preprocess_face(self, face_img, target_size=(100, 100)):
-        """
-        Preprocess face image for better recognition.
         
-        Args:
-            face_img (numpy.ndarray): Input face image (grayscale)
-            target_size (tuple): Target size for resizing
-            
-        Returns:
-            numpy.ndarray: Preprocessed face image
-        """
         if face_img.ndim == 3: # Convert to grayscale if it's not already
             face_img = cv2.cvtColor(face_img, cv2.COLOR_BGR2GRAY)
 
@@ -106,15 +90,7 @@ class FaceRecognizer:
         return face_img
     
     def calculate_similarity_metrics(self, face1, face2):
-        """
-        Calculate multiple similarity metrics between two preprocessed faces.
-        
-        Args:
-            face1, face2 (numpy.ndarray): Preprocessed face images to compare
-            
-        Returns:
-            dict: Dictionary of similarity scores
-        """
+       
         # Ensure images are float32 for comparison where necessary
         face1_f = face1.astype(np.float32)
         face2_f = face2.astype(np.float32)
@@ -144,12 +120,7 @@ class FaceRecognizer:
         }
     
     def load_known_faces(self):
-        """
-        Load all known faces from the dataset directory with improved organization.
-        
-        Returns:
-            bool: True if faces loaded successfully, False otherwise
-        """
+       
         if not os.path.exists(self.dataset_dir):
             print(f"Dataset directory '{self.dataset_dir}' does not exist. No faces to load.")
             return False
@@ -258,15 +229,7 @@ class FaceRecognizer:
             self.recognizers_trained = False
     
     def recognize_face(self, face_img):
-        """
-        Recognize a face using multiple algorithms and voting.
-        
-        Args:
-            face_img (numpy.ndarray): Face image to recognize (can be BGR or grayscale)
-            
-        Returns:
-            tuple: (name, college, aggregated_confidence) or (None, None, 0.0) if not recognized
-        """
+      
         if len(self.known_faces) == 0 or not self.recognizers_trained:
             return None, None, 0.0
         

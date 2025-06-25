@@ -5,23 +5,7 @@ import time
 
 def face_registration(name=None, college=None, dataset_dir="datasets", excel_file="user_details.xlsx", 
                      poses=None, timeout=5, camera_index=0):
-    """
-    Register a user's face by capturing images from multiple angles.
-    
-    Args:
-        name (str, optional): User's name. If None, will prompt for input.
-        college (str, optional): User's college/university. If None, will prompt for input.
-        dataset_dir (str): Directory to save face images. Default: "datasets"
-        excel_file (str): Excel file to store user details. Default: "user_details.xlsx"
-        poses (list, optional): List of poses to capture. Default: ["center", "left", "right", "up", "down"]
-        timeout (int): Time to hold each pose in seconds. Default: 5
-        camera_index (int): Camera index for cv2.VideoCapture. Default: 0
-    
-    Returns:
-        bool: True if registration successful, False otherwise
-    """
-    
-    # Set default poses if not provided
+   
     if poses is None:
         poses = ["center", "left", "right", "up", "down"]
     
@@ -146,12 +130,7 @@ def _save_user_details(excel_file, name, college):
 
 # Example usage
 if __name__ == "__main__":
-    # Method 1: Let the function prompt for input
+   
     face_registration()
     
-    # Method 2: Pass parameters directly
-    # face_registration(name="John Doe", college="MIT", timeout=3)
     
-    # Method 3: Custom poses and settings
-    # custom_poses = ["front", "left_profile", "right_profile"]
-    # face_registration(poses=custom_poses, dataset_dir="my_faces", timeout=7)

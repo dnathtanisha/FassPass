@@ -8,14 +8,7 @@ class FaceRecognizer:
     """An improved face recognition system with multiple matching algorithms."""
     
     def __init__(self, dataset_dir="datasets", recognition_threshold=0.6, min_votes=2):
-        """
-        Initialize the Face Recognizer with improved algorithms.
-        
-        Args:
-            dataset_dir (str): Directory containing face images
-            recognition_threshold (float): Threshold for face recognition (0.0-1.0)
-            min_votes (int): Minimum votes needed for recognition
-        """
+       
         self.dataset_dir = dataset_dir
         self.recognition_threshold = recognition_threshold
         self.min_votes = min_votes
@@ -33,17 +26,7 @@ class FaceRecognizer:
         self.recognizers_trained = False
         
     def preprocess_face(self, face_img, target_size=(100, 100)):
-        """
-        Preprocess face image for better recognition.
-        
-        Args:
-            face_img (numpy.ndarray): Input face image
-            target_size (tuple): Target size for resizing
-            
-        Returns:
-            numpy.ndarray: Preprocessed face image
-        """
-        # Resize to standard size
+       
         face_img = cv2.resize(face_img, target_size)
         
         # Histogram equalization for better contrast
