@@ -249,21 +249,7 @@ class FaceRecognizer:
 
 def face_recognition(dataset_dir="datasets", recognition_threshold=0.6, camera_index=0, 
                     show_confidence=False, window_name="Face Recognition", min_votes=1):
-    """
-    Start real-time face recognition using webcam with improved accuracy.
     
-    Args:
-        dataset_dir (str): Directory containing face images
-        recognition_threshold (float): Similarity threshold for recognition (0.0-1.0)
-        camera_index (int): Camera index for cv2.VideoCapture
-        show_confidence (bool): Whether to show confidence scores
-        window_name (str): Name of the display window
-        min_votes (int): Minimum votes needed for recognition
-        
-    Returns:
-        bool: True if ran successfully, False if error occurred
-    """
-    # Initialize face recognizer
     recognizer = FaceRecognizer(dataset_dir, recognition_threshold, min_votes)
     
     # Load known faces
